@@ -2,50 +2,39 @@ require "faraday"
 require "faraday/httpclient"
 
 class NxtHttpClient
-  def initialize(options: {}, base_url: nil, default_headers: {}, request: {})
-    @connection = ::Faraday.new(
-      url: base_url,
-      headers: default_headers,
-      request: request
-    ) do |connection|
-      configure_response_middlewares(connection, options)
-      connection.adapter options[:adapter] || :typhoeus
+  def initialize(url: nil, headers: {}, adapter: :typhoeus, json: false)
+    headers = headers.merge(content_type: "application/json; charset=utf-8") if json
+    @connection = ::Faraday.new(url:, headers:) do |connection|
+      connection.adapter adapter
 
-      ssl_options = options[:ssl] || { verify: true, verify_mode: 0 }
-      ssl_options.each do |k, v|
-        connection.ssl[k] = v
+      if json
+        connection.response :json
+        connection.request :json
       end
-    end
-  end
 
-  def send_request(method:, url:, body: nil, headers: {})
-    @connection.send(method) do |request|
-      request.url url
-      request.headers = request.headers.merge(headers)
-      request.body = body if body.present?
+      yield(connection) if block_given?
     end
   end
 
   %w[get delete head].each do |method|
-    define_method(method) do |path:, params: {}, headers: {}|
-      @connection.send(method, path, params, headers)
+    define_method(method) do |action, params: {}, headers: {}|
+      @connection.send(method, action, params, headers)
     end
   end
 
   %w[post put patch delete].each do |method|
-    define_method(method) do |**args|
-      send_request(method: method, **args)
+    define_method(method) do |action, **args|
+      send_request(method:, action:, **args)
     end
   end
 
   private
 
-  def configure_response_middlewares(connection, options)
-    connection.request :multipart if options[:multipart]
-    connection.request :url_encoded if options[:url_encoded]
-
-    connection.response :logger if Rails.env.development? || options[:show_log]
-    connection.response :json if options[:json_response]
-    connection.response :raise_error if options[:raise_error]
+  def send_request(method:, action:, body: nil, headers: {})
+    @connection.send(method) do |request|
+      request.url action
+      request.headers = request.headers.merge(headers)
+      request.body = body if body.present?
+    end
   end
 end
