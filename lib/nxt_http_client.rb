@@ -2,9 +2,12 @@ require "faraday"
 require "faraday/httpclient"
 
 class NxtHttpClient
-  def initialize(url: nil, headers: {}, adapter: :typhoeus, json: false)
-    headers = headers.merge(content_type: "application/json; charset=utf-8") if json
-    @connection = ::Faraday.new(url:, headers:) do |connection|
+  def initialize(url: nil, headers: {}, request: {}, adapter: :typhoeus, json: false)
+    headers = headers.merge(
+      content_type: "application/json; charset=utf-8",
+      accept: "application/json"
+    ) if json
+    @connection = ::Faraday.new(url:, headers:, request:) do |connection|
       connection.adapter adapter
 
       if json
