@@ -19,7 +19,7 @@ class NxtHttpClient
     end
   end
 
-  %w[get delete head].each do |method|
+  %w[get head].each do |method|
     define_method(method) do |action, params = {}, headers = {}|
       @connection.send(method, action, params, headers)
     end
