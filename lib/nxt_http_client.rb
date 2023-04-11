@@ -1,5 +1,6 @@
 require "faraday"
 require "faraday/httpclient"
+require "faraday_middleware"
 
 class NxtHttpClient
   def initialize(url: nil, headers: {}, request: {}, adapter: :typhoeus, json: false)
