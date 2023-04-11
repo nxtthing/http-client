@@ -20,20 +20,20 @@ class NxtHttpClient
   end
 
   %w[get delete head].each do |method|
-    define_method(method) do |action, params: {}, headers: {}|
+    define_method(method) do |action, params = {}, headers = {}|
       @connection.send(method, action, params, headers)
     end
   end
 
   %w[post put patch delete].each do |method|
-    define_method(method) do |action, **args|
-      send_request(method:, action:, **args)
+    define_method(method) do |action, body = nil, headers = {}, **args|
+      send_request(method:, action:, body:, headers:, **args)
     end
   end
 
   private
 
-  def send_request(method:, action:, body: nil, headers: {})
+  def send_request(method:, action:, body:, headers: {})
     @connection.send(method) do |request|
       request.url action
       request.headers = request.headers.merge(headers)
