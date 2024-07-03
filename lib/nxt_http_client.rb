@@ -1,4 +1,5 @@
 require "faraday"
+require "faraday/typhoeus"
 
 class NxtHttpClient
   def initialize(url: nil, headers: {}, request: {}, adapter: :typhoeus, json: false)
